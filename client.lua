@@ -19,7 +19,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     SetVehicleEnginePowerMultiplier(vehicle, multiplier * 3.0)
     SetVehicleEngineTorqueMultiplier(vehicle, multiplier * 3.0)
 
-    -- Handling für Beschleunigung anpassen
+    -- Handling an die Beschleunigung anpassen
     SetVehicleHandlingFloat(vehicle, 'CHandlingData', 'fInitialDriveForce', 0.35 + (multiplier * 0.02))
     SetVehicleHandlingFloat(vehicle, 'CHandlingData', 'fDriveInertia', 1.0 + (multiplier * 0.05))
     SetVehicleHandlingFloat(vehicle, 'CHandlingData', 'fTractionCurveMax', 2.5 + (multiplier * 0.1))
