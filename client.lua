@@ -3,7 +3,6 @@ local ESX = exports['es_extended']:getSharedObject()
 -- Event vom Server empfangen
 RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     local playerPed = PlayerPedId()
-    if not ESX.PlayerData then return end
 
     -- Fehler, wenn der Spieler nicht im Fahrzeug ist
     if not IsPedInAnyVehicle(playerPed, false) then
