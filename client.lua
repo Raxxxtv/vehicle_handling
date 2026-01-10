@@ -1,9 +1,11 @@
 local ESX = exports['es_extended']:getSharedObject()
 
+local maxSpeed = {} -- Variable für die originale Maximal Geschwindigkeit definieren
+
 -- Event vom Server empfangen
 RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     local playerPed = PlayerPedId()
-
+    if not ESX.IsPlayerLoaded() then return end -- überprüfen ob der Spieler im Char eingeloggt ist
     -- Fehler, wenn der Spieler nicht im Fahrzeug ist
     if not IsPedInAnyVehicle(playerPed, false) then
         ESX.ShowNotification('Du befindest dich nicht in einem Fahrzeug', 'info', 5000, 'Handlingsystem')
@@ -15,14 +17,25 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     if not DoesEntityExist(vehicle) then return end
 
     -- Passt die Motorleistung an
-    SetVehicleEnginePowerMultiplier(vehicle, multiplier * 3.0)
-    SetVehicleEngineTorqueMultiplier(vehicle, multiplier * 3.0)
+    if multiplier ~= 0 then
+        if not maxSpeed[vehicle] then -- falls maxSpeed für das Fahrzeug noch nicht gesetzt wurde, wird es gesetzt
+            local maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
+        end
+        SetVehicleCheatPowerIncrease(vehicle, multiplier)
+        local newMaxSpeed = maxSpeed[vehicle] * (1.0 + multiplier * 0.2)
+        SetVehicleMaxSpeed(vehicle, newMaxSpeed)
+        SetVehicleEnginePowerMultiplier(vehicle, multiplier * 3.0)
+        SetVehicleEngineTorqueMultiplier(vehicle, multiplier * 3.0)
 
-    -- Handling an die Beschleunigung anpassen
-    SetVehicleHandlingFloat(vehicle, 'CHandlingData', 'fInitialDriveForce', 0.35 + (multiplier * 0.02))
-    SetVehicleHandlingFloat(vehicle, 'CHandlingData', 'fDriveInertia', 1.0 + (multiplier * 0.05))
-    SetVehicleHandlingFloat(vehicle, 'CHandlingData', 'fTractionCurveMax', 2.5 + (multiplier * 0.1))
-    SetVehicleHandlingFloat(vehicle, 'CHandlingData', 'fTractionCurveMin', 2.2 + (multiplier * 0.1))
-
-    ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt auf: %s'):format(multiplier), 'info', 5000, 'Handlingsystem')
+        ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt auf: %s'):format(multiplier), 'info', 5000, 'Handlingsystem')
+    else -- Geschwindigkeit zurücksetzen
+        if not maxSpeed[vehicle] then
+            local maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
+        end
+        SetVehicleCheatPowerIncrease(vehicle, multiplier)
+        SetVehicleMaxSpeed(vehicle, maxSpeed)
+        SetVehicleEnginePowerMultiplier(vehicle, multiplier)
+        SetVehicleEngineTorqueMultiplier(vehicle, multiplier)
+        maxSpeed[vehicle] = nil
+    end
 end)
