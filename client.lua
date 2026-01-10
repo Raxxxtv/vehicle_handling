@@ -19,7 +19,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     -- Passt die Motorleistung an
     if multiplier ~= 0 then
         if not maxSpeed[vehicle] then -- falls maxSpeed für das Fahrzeug noch nicht gesetzt wurde, wird es gesetzt
-            local maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
+            maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
         end
         SetVehicleCheatPowerIncrease(vehicle, multiplier)
         local newMaxSpeed = maxSpeed[vehicle] * (1.0 + multiplier * 0.2)
@@ -30,7 +30,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
         ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt auf: %s'):format(multiplier), 'info', 5000, 'Handlingsystem')
     else -- Geschwindigkeit zurücksetzen
         if not maxSpeed[vehicle] then
-            local maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
+            maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
         end
         SetVehicleCheatPowerIncrease(vehicle, multiplier)
         SetVehicleMaxSpeed(vehicle, maxSpeed)
