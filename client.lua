@@ -33,7 +33,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
             maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
         end
         SetVehicleCheatPowerIncrease(vehicle, multiplier)
-        SetVehicleMaxSpeed(vehicle, maxSpeed)
+        SetVehicleMaxSpeed(vehicle, maxSpeed[vehicle])
         SetVehicleEnginePowerMultiplier(vehicle, multiplier)
         SetVehicleEngineTorqueMultiplier(vehicle, multiplier)
         maxSpeed[vehicle] = nil
