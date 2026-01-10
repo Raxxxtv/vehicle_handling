@@ -26,8 +26,6 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
         SetVehicleMaxSpeed(vehicle, newMaxSpeed)
         SetVehicleEnginePowerMultiplier(vehicle, multiplier * 3.0)
         SetVehicleEngineTorqueMultiplier(vehicle, multiplier * 3.0)
-
-        ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt auf: %s'):format(multiplier), 'info', 5000, 'Handlingsystem')
     else -- Geschwindigkeit zurücksetzen
         if not maxSpeed[vehicle] then
             maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
@@ -38,4 +36,5 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
         SetVehicleEngineTorqueMultiplier(vehicle, multiplier)
         maxSpeed[vehicle] = nil
     end
+    ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt auf: %s'):format(multiplier), 'info', 5000, 'Handlingsystem')
 end)
