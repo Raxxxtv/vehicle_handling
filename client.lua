@@ -15,21 +15,18 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     local vehicle = GetVehiclePedIsIn(playerPed, false)
 
     if not DoesEntityExist(vehicle) then return end
+    if not maxSpeed[vehicle] then -- falls maxSpeed für das Fahrzeug noch nicht gesetzt wurde, wird es gesetzt
+        maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
+    end
 
     -- Passt die Motorleistung an
     if multiplier ~= 0 then
-        if not maxSpeed[vehicle] then -- falls maxSpeed für das Fahrzeug noch nicht gesetzt wurde, wird es gesetzt
-            maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
-        end
         SetVehicleCheatPowerIncrease(vehicle, multiplier)
         local newMaxSpeed = maxSpeed[vehicle] * (1.0 + multiplier * 0.2)
         SetVehicleMaxSpeed(vehicle, newMaxSpeed)
         SetVehicleEnginePowerMultiplier(vehicle, multiplier * 3.0)
         SetVehicleEngineTorqueMultiplier(vehicle, multiplier * 3.0)
     else -- Geschwindigkeit zurücksetzen
-        if not maxSpeed[vehicle] then
-            maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
-        end
         SetVehicleCheatPowerIncrease(vehicle, multiplier)
         SetVehicleMaxSpeed(vehicle, maxSpeed[vehicle])
         SetVehicleEnginePowerMultiplier(vehicle, multiplier)
