@@ -3,6 +3,8 @@ local ESX = exports['es_extended']:getSharedObject()
 -- Speichert originale MaxSpeed pro Fahrzeug
 local originalMaxSpeed = {}
 
+local speedChanged = false -- Setzt die Variable, die angibt ob das Handling geändert wurde
+
 -- Mögliche Zahl begrenzen
 local function clamp(value, min, max)
     return math.max(min, math.min(value, max))
@@ -17,10 +19,12 @@ local function changeVehicleSpeed(vehicle, multiplier)
     local powerValue = clamp(multiplier * Config.PowerValueScale, 1.0, 1.8) -- Setzt Wert wenn unter 1 auf 1 und wenn über 1.8 auf 1.8, sonst bleibt er so wie er ist
 
     CreateThread(function()
+        speedChanged = true
         while speedThreadId == myThreadId do -- Führt den Code solange aus, wie speedThreadId die gleiche Zahl wie myThreadId hat
             SetVehicleCheatPowerIncrease(vehicle, powerValue) -- Ändert das Handling und die Geschwindigkeit des Fahrzeugs
             Wait(0)
         end
+        speedChanged = false
     end)
 end
 
@@ -35,12 +39,14 @@ local function resetVehicle(vehicle)
 
     SetVehicleCheatPowerIncrease(vehicle, 1)
     speedThreadId = speedThreadId + 1
+    speedChanged = false
 
     if Config.EnableMaxSpeedLimit and originalMaxSpeed[vehicle] then
         SetVehicleMaxSpeed(vehicle, originalMaxSpeed[vehicle])
     end
 
     originalMaxSpeed[vehicle] = nil
+    notify('Fahrzeugbeschleunigung zurückgesetzt.', 'success', 'Handlingsystem')
 end
 
 RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
@@ -69,7 +75,6 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     -- multiplier 0 = reset
     if multiplier == 0 then
         resetVehicle(vehicle)
-        notify('Fahrzeugbeschleunigung zurückgesetzt.', 'success', 'Handlingsystem')
         return
     end
     changeVehicleSpeed(vehicle, multiplier)
@@ -84,14 +89,15 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
 end)
 
 -- Beim Fahrzeugwechsel / Aussteigen
-AddEventHandler('baseevents:leftVehicle', function(vehicle)
-    resetVehicle(vehicle)
+AddEventHandler('esx:exitedVehicle', function(vehicle, plate, seat, displayName, netId)
+    if speedChanged then
+        resetVehicle(vehicle)
+    end
 end)
-
 -- Sicherheit: Reset bei Spieler-Tod
 AddEventHandler('esx:onPlayerDeath', function()
     local ped = PlayerPedId()
-    if IsPedInAnyVehicle(ped, false) then
-        resetVehicle(GetVehiclePedIsIn(ped, false))
+    if speedChanged then
+        resetVehicle(GetPlayersLastVehicle())
     end
 end)
