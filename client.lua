@@ -13,7 +13,7 @@ end
 local speedThreadId = 0 -- Setzt die ThreadId
 
 local function changeVehicleSpeed(vehicle, multiplier)
-    speedThreadId = speedThreadId + 1 -- Ändert die ThreadId um eins
+    speedThreadId = speedThreadId + 1
     local myThreadId = speedThreadId -- Ändert die aktuelle ThreadId zur ThreadId die angegeben wurde (speedThreadId)
 
     local powerValue = clamp(multiplier * Config.PowerValueScale, 1.0, 1.8) -- Setzt Wert wenn unter 1 auf 1 und wenn über 1.8 auf 1.8, sonst bleibt er so wie er ist
