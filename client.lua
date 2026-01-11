@@ -4,6 +4,8 @@ local ESX = exports['es_extended']:getSharedObject()
 local originalMaxSpeed = {}
 
 local speedChanged = false
+local monitoringExit = false
+local leftVehicleThread = false
 
 -- Capping the possible Numbers
 local function clamp(value, min, max)
@@ -41,6 +43,7 @@ local function resetVehicle(vehicle)
     SetVehicleCheatPowerIncrease(vehicle, 1)
     speedThreadId = speedThreadId + 1
     speedChanged = false
+    monitoringExit = false
 
     if Config.EnableMaxSpeedLimit and originalMaxSpeed[vehicle] then
         SetVehicleMaxSpeed(vehicle, originalMaxSpeed[vehicle])
@@ -48,6 +51,38 @@ local function resetVehicle(vehicle)
 
     originalMaxSpeed[vehicle] = nil
     ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success', 5000, 'Handlingystem')
+end
+-- Checks if the player left the vehicle
+local function leftVehicle()
+    if leftVehicleThread then return end
+    leftVehicleThread = true
+    CreateThread(function()
+        local wasInVehicle = false
+        local wasDriver = false
+        local lastVehicle = nil
+
+        while monitoringExit do
+            local ped = ESX.PlayerData.ped
+            local isInVehicle = IsPedInAnyVehicle(ped)
+
+            if isInVehicle then
+                local vehicle = GetVehiclePedIsIn(ped)
+                lastVehicle = vehicle
+                wasDriver = (GetPedInVehicleSeat(vehicle, -1) == ped)
+                wasInVehicle = true
+            else
+                if wasInVehicle and wasDriver then
+                    resetVehicle(lastVehicle)
+                end
+
+                wasInVehicle = false
+                wasDriver = false
+                lastVehicle = nil
+            end
+            Wait(200)
+        end
+        leftVehicleThread = false
+    end)
 end
 
 RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
@@ -89,6 +124,8 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
         return
     end
     changeVehicleSpeed(vehicle, multiplier)
+    monitoringExit = true
+    leftVehicle()
 
     -- changes the MaxSpeed
     if Config.EnableMaxSpeedLimit then
@@ -99,12 +136,6 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success', 5000, 'Handlingystem')
 end)
 
--- Gets Triggered if the player leaves the vehicle
-AddEventHandler('esx:exitedVehicle', function(vehicle, plate, seat, displayName, netId)
-    if speedChanged and seat == -1 then
-        resetVehicle(vehicle)
-    end
-end)
 -- Gets Triggered if the player dies
 AddEventHandler('esx:onPlayerDeath', function()
     local ped = ESX.PlayerData.ped
