@@ -2,7 +2,6 @@ local ESX = exports['es_extended']:getSharedObject()
 
 -- Speichert originale MaxSpeed pro Fahrzeug
 local originalMaxSpeed = {}
-local speedThread = false
 
 -- Mögliche Zahl begrenzen
 local function clamp(value, min, max)
@@ -35,7 +34,7 @@ local function resetVehicle(vehicle)
     if not DoesEntityExist(vehicle) then return end
 
     SetVehicleCheatPowerIncrease(vehicle, 1)
-    speedThread = false
+    speedThreadId = speedThreadId + 1
 
     if Config.EnableMaxSpeedLimit and originalMaxSpeed[vehicle] then
         SetVehicleMaxSpeed(vehicle, originalMaxSpeed[vehicle])
