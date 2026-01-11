@@ -1,39 +1,40 @@
 local ESX = exports['es_extended']:getSharedObject()
 
--- Speichert originale MaxSpeed pro Fahrzeug
+-- Saves Original MaxSpeed
 local originalMaxSpeed = {}
 
-local speedChanged = false -- Setzt die Variable, die angibt ob das Handling geändert wurde
+local speedChanged = false
 
--- Mögliche Zahl begrenzen
+-- Capping the possible Numbers
 local function clamp(value, min, max)
     return math.max(min, math.min(value, max))
 end
 
-local speedThreadId = 0 -- Setzt die ThreadId
+local speedThreadId = 0 -- Sets ThreadId
 
 local function changeVehicleSpeed(vehicle, multiplier)
+    if speedChanged then return end
+    speedChanged = true
+    -- Checks if the vehicle exists
+    if not DoesEntityExist(vehicle) then 
+        speedChanged = false
+        return 
+    end
     speedThreadId = speedThreadId + 1
-    local myThreadId = speedThreadId -- Ändert die aktuelle ThreadId zur ThreadId die angegeben wurde (speedThreadId)
+    local myThreadId = speedThreadId -- Changes the current ThreadId to the global ThreadId
 
-    local powerValue = clamp(multiplier * Config.PowerValueScale, 1.0, 1.8) -- Setzt Wert wenn unter 1 auf 1 und wenn über 1.8 auf 1.8, sonst bleibt er so wie er ist
+    local powerValue = clamp(multiplier * Config.PowerValueScale, 1.0, 1.8) -- Sets value to 1 if the value is under one and to 1.8 if the value is over 1.8, if its in the range, then the value stays the same
 
     CreateThread(function()
-        speedChanged = true
-        while speedThreadId == myThreadId do -- Führt den Code solange aus, wie speedThreadId die gleiche Zahl wie myThreadId hat
-            SetVehicleCheatPowerIncrease(vehicle, powerValue) -- Ändert das Handling und die Geschwindigkeit des Fahrzeugs
+        while speedThreadId == myThreadId do -- Runs the Code while speedThreadId has the same value as myThreadId
+            SetVehicleCheatPowerIncrease(vehicle, powerValue) -- Changes the handling of the vehicle
             Wait(0)
         end
         speedChanged = false
     end)
 end
 
--- Vereinfachung für Notifys
-local function notify(message, notifType, header)
-    ESX.ShowNotification(message, notifType or 'info', 5000, header or 'System')
-end
-
--- Funktion zum wiederherstellen vom Originalen Handling
+-- Resets the handling of the vehicle
 local function resetVehicle(vehicle)
     if not DoesEntityExist(vehicle) then return end
 
@@ -46,33 +47,38 @@ local function resetVehicle(vehicle)
     end
 
     originalMaxSpeed[vehicle] = nil
-    notify('Fahrzeugbeschleunigung zurückgesetzt', 'success', 'Handlingsystem')
+    ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success' 5000, 'Handlingystem')
 end
 
 RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
 
-    -- Sicherstellen, dass der Spieler im Char ist
-    if not ESX.IsPlayerLoaded() then return end
-    -- Überprüft ob das Handling des Fahrzeugs geändert wurde und ob multiplier 0 ist (wenn das Handling nicht geändert wurde aber multiplier 0 ist, bekommt der Spieler ein Fehler)
+    -- Checks if the player is logged in his char
+    if not ESX.PlayerLoaded then return end
+    -- Checks if the handling was already changed and if multiplier equals 0. If the handling wasnt changed and the multiplier equals 0 then the player becomes an error.
     if not speedChanged and multiplier == 0 then
-        notify('Dein Fahrzeug wurde nicht verändert', 'error', 'Handlingsystem')
+        ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error' 5000, 'Handlingystem')
         return
     end
 
     multiplier = clamp(multiplier, 0, Config.MaxMultiplier)
 
-    local playerPed = PlayerPedId()
+    local playerPed = ESX.PlayerData.ped
 
-    if not IsPedInAnyVehicle(playerPed, false) then
-        notify('Du befindest dich in keinem Fahrzeug', 'error', 'Handlingsystem')
+    if not IsPedInAnyVehicle(playerPed) then
+        ESX.ShowNotification('Du befindest dich in keinem Fahrzeug', 'error' 5000, 'Handlingystem')
         return
     end
 
     local vehicle = GetVehiclePedIsIn(playerPed, false)
 
     if not DoesEntityExist(vehicle) then return end
+    -- Checks if the player is on the Driver Seat
+    if ESX.PlayerData.ped ~= GetPedInVehicleSeat(vehicle, -1) then 
+        ESX.ShowNotification('Du befindest dich nicht auf dem Fahrersitz', 'error' 5000, 'Handlingystem')
+        return 
+    end
 
-    -- Originale MaxSpeed einmalig speichern
+    -- Saves the originalMaxSpeed for the vehicle once
     if not originalMaxSpeed[vehicle] then
         originalMaxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
     end
@@ -84,24 +90,24 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     end
     changeVehicleSpeed(vehicle, multiplier)
 
-    -- MaxSpeed-Anpassung
+    -- changes the MaxSpeed
     if Config.EnableMaxSpeedLimit then
         local newMaxSpeed = originalMaxSpeed[vehicle] * (1.0 + multiplier * Config.MaxSpeedScale)
         SetVehicleMaxSpeed(vehicle, newMaxSpeed)
     end
 
-    notify(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success', 'Handlingsystem')
+    ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success' 5000, 'Handlingystem')
 end)
 
--- Beim Fahrzeugwechsel / Aussteigen
+-- Gets Triggered if the player leaves the vehicle
 AddEventHandler('esx:exitedVehicle', function(vehicle, plate, seat, displayName, netId)
-    if speedChanged then
+    if speedChanged and seat == -1 then
         resetVehicle(vehicle)
     end
 end)
--- Sicherheit: Reset bei Spieler-Tod
+-- Gets Triggered if the player dies
 AddEventHandler('esx:onPlayerDeath', function()
-    local ped = PlayerPedId()
+    local ped = ESX.PlayerData.ped
     if speedChanged then
         resetVehicle(GetPlayersLastVehicle())
     end
