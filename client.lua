@@ -47,7 +47,7 @@ local function resetVehicle(vehicle)
     end
 
     originalMaxSpeed[vehicle] = nil
-    ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success' 5000, 'Handlingystem')
+    ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success', 5000, 'Handlingystem')
 end
 
 RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
@@ -56,7 +56,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     if not ESX.PlayerLoaded then return end
     -- Checks if the handling was already changed and if multiplier equals 0. If the handling wasnt changed and the multiplier equals 0 then the player becomes an error.
     if not speedChanged and multiplier == 0 then
-        ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error' 5000, 'Handlingystem')
+        ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error', 5000, 'Handlingystem')
         return
     end
 
@@ -65,7 +65,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     local playerPed = ESX.PlayerData.ped
 
     if not IsPedInAnyVehicle(playerPed) then
-        ESX.ShowNotification('Du befindest dich in keinem Fahrzeug', 'error' 5000, 'Handlingystem')
+        ESX.ShowNotification('Du befindest dich in keinem Fahrzeug', 'error', 5000, 'Handlingystem')
         return
     end
 
@@ -74,7 +74,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     if not DoesEntityExist(vehicle) then return end
     -- Checks if the player is on the Driver Seat
     if ESX.PlayerData.ped ~= GetPedInVehicleSeat(vehicle, -1) then 
-        ESX.ShowNotification('Du befindest dich nicht auf dem Fahrersitz', 'error' 5000, 'Handlingystem')
+        ESX.ShowNotification('Du befindest dich nicht auf dem Fahrersitz', 'error', 5000, 'Handlingystem')
         return 
     end
 
@@ -96,7 +96,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
         SetVehicleMaxSpeed(vehicle, newMaxSpeed)
     end
 
-    ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success' 5000, 'Handlingystem')
+    ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success', 5000, 'Handlingystem')
 end)
 
 -- Gets Triggered if the player leaves the vehicle
