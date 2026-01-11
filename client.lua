@@ -9,26 +9,28 @@ local function clamp(value, min, max)
     return math.max(min, math.min(value, max))
 end
 
+local speedThreadId = 0 -- Setzt die ThreadId
+
 local function changeVehicleSpeed(vehicle, multiplier)
-    if speedThread then
-        speedThread = false
-        Wait(50)
-    end
-    speedThread = true
-    local powerValue = clamp(multiplier * Config.PowerValueScale, 1, 1.8) -- Setzt Wert wenn unter 1 auf 1 und wenn über 1.8 auf 1.8, sonst bleibt er so wie er ist
+    speedThreadId = speedThreadId + 1 -- Ändert die ThreadId um eins
+    local myThreadId = speedThreadId -- Ändert die aktuelle ThreadId zur ThreadId die angegeben wurde (speedThreadId)
+
+    local powerValue = clamp(multiplier * Config.PowerValueScale, 1.0, 1.8) -- Setzt Wert wenn unter 1 auf 1 und wenn über 1.8 auf 1.8, sonst bleibt er so wie er ist
+
     CreateThread(function()
-        while speedThread do
-            -- Beschleunigung skalieren
-            SetVehicleCheatPowerIncrease(vehicle, powerValue)
+        while speedThreadId == myThreadId do -- Führt den Code solange aus, wie speedThreadId die gleiche Zahl wie myThreadId hat
+            SetVehicleCheatPowerIncrease(vehicle, powerValue) -- Ändert das Handling und die Geschwindigkeit des Fahrzeugs
             Wait(0)
         end
     end)
 end
 
+-- Vereinfachung für Notifys
 local function notify(message, notifType, header)
     ESX.ShowNotification(message, notifType or 'info', 5000, header or 'System')
 end
 
+-- Funktion zum wiederherstellen vom Originalen Handling
 local function resetVehicle(vehicle)
     if not DoesEntityExist(vehicle) then return end
 
