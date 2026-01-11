@@ -1,37 +1,96 @@
 local ESX = exports['es_extended']:getSharedObject()
 
-local maxSpeed = {} -- Variable für die originale Maximal Geschwindigkeit definieren
+-- Speichert originale MaxSpeed pro Fahrzeug
+local originalMaxSpeed = {}
+local speedThread = false
 
--- Event vom Server empfangen
+-- Mögliche Zahl begrenzen
+local function clamp(value, min, max)
+    return math.max(min, math.min(value, max))
+end
+
+local function changeVehicleSpeed(vehicle, multiplier)
+    if speedThread then
+        speedThread = false
+        Wait(50)
+    end
+    speedThread = true
+    local powerValue = clamp(multiplier * Config.PowerValueScale, 1, 1.8) -- Setzt Wert wenn unter 1 auf 1 und wenn über 1.8 auf 1.8, sonst bleibt er so wie er ist
+    CreateThread(function()
+        while speedThread do
+            -- Beschleunigung skalieren
+            SetVehicleCheatPowerIncrease(vehicle, powerValue)
+            Wait(0)
+        end
+    end)
+end
+
+local function notify(message, notifType, header)
+    ESX.ShowNotification(message, notifType or 'info', 5000, header or 'System')
+end
+
+local function resetVehicle(vehicle)
+    if not DoesEntityExist(vehicle) then return end
+
+    SetVehicleCheatPowerIncrease(vehicle, 1)
+    speedThread = false
+
+    if Config.EnableMaxSpeedLimit and originalMaxSpeed[vehicle] then
+        SetVehicleMaxSpeed(vehicle, originalMaxSpeed[vehicle])
+    end
+
+    originalMaxSpeed[vehicle] = nil
+end
+
 RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
+
+    -- Sicherstellen, dass der Spieler im Char ist
+    if not ESX.IsPlayerLoaded() then return end
+
+    multiplier = clamp(multiplier, 0, Config.MaxMultiplier)
+
     local playerPed = PlayerPedId()
-    if not ESX.IsPlayerLoaded() then return end -- überprüfen ob der Spieler im Char eingeloggt ist
-    -- Fehler, wenn der Spieler nicht im Fahrzeug ist
+
     if not IsPedInAnyVehicle(playerPed, false) then
-        ESX.ShowNotification('Du befindest dich nicht in einem Fahrzeug', 'info', 5000, 'Handlingsystem')
+        notify('Du befindest dich in keinem Fahrzeug.', 'error', 'Handlingsystem')
         return
     end
 
     local vehicle = GetVehiclePedIsIn(playerPed, false)
 
     if not DoesEntityExist(vehicle) then return end
-    if not maxSpeed[vehicle] then -- falls maxSpeed für das Fahrzeug noch nicht gesetzt wurde, wird es gesetzt
-        maxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
+
+    -- Originale MaxSpeed einmalig speichern
+    if not originalMaxSpeed[vehicle] then
+        originalMaxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
     end
 
-    -- Passt die Motorleistung an
-    if multiplier ~= 0 then
-        SetVehicleCheatPowerIncrease(vehicle, multiplier)
-        local newMaxSpeed = maxSpeed[vehicle] * (1.0 + multiplier * 0.2)
-        SetVehicleMaxSpeed(vehicle, newMaxSpeed)
-        SetVehicleEnginePowerMultiplier(vehicle, multiplier * 3.0)
-        SetVehicleEngineTorqueMultiplier(vehicle, multiplier * 3.0)
-    else -- Geschwindigkeit zurücksetzen
-        SetVehicleCheatPowerIncrease(vehicle, multiplier)
-        SetVehicleMaxSpeed(vehicle, maxSpeed[vehicle])
-        SetVehicleEnginePowerMultiplier(vehicle, multiplier)
-        SetVehicleEngineTorqueMultiplier(vehicle, multiplier)
-        maxSpeed[vehicle] = nil
+    -- multiplier 0 = reset
+    if multiplier == 0 then
+        resetVehicle(vehicle)
+        notify('Fahrzeugbeschleunigung zurückgesetzt.', 'success', 'Handlingsystem')
+        return
     end
-    ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt auf: %s'):format(multiplier), 'info', 5000, 'Handlingsystem')
+    changeVehicleSpeed(vehicle, multiplier)
+
+    -- MaxSpeed-Anpassung
+    if Config.EnableMaxSpeedLimit then
+        local newMaxSpeed = originalMaxSpeed[vehicle] * (1.0 + multiplier * Config.MaxSpeedScale)
+        SetVehicleMaxSpeed(vehicle, newMaxSpeed)
+    end
+
+    notify(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success', 'Handlingsystem')
+end)
+
+-- Beim Fahrzeugwechsel / Aussteigen
+AddEventHandler('baseevents:leftVehicle', function(vehicle)
+    resetVehicle(vehicle)
+end)
+
+-- Sicherheit: Reset bei Spieler-Tod
+AddEventHandler('esx:onPlayerDeath', function()
+    local ped = PlayerPedId()
+    if IsPedInAnyVehicle(ped, false) then
+        resetVehicle(GetVehiclePedIsIn(ped, false))
+    end
 end)
