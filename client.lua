@@ -46,20 +46,25 @@ local function resetVehicle(vehicle)
     end
 
     originalMaxSpeed[vehicle] = nil
-    notify('Fahrzeugbeschleunigung zurückgesetzt.', 'success', 'Handlingsystem')
+    notify('Fahrzeugbeschleunigung zurückgesetzt', 'success', 'Handlingsystem')
 end
 
 RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
 
     -- Sicherstellen, dass der Spieler im Char ist
     if not ESX.IsPlayerLoaded() then return end
+    -- Überprüft ob das Handling des Fahrzeugs geändert wurde und ob multiplier 0 ist (wenn das Handling nicht geändert wurde aber multiplier 0 ist, bekommt der Spieler ein Fehler)
+    if not speedChanged and multiplier == 0 then
+        notify('Dein Fahrzeug wurde nicht verändert', 'error', 'Handlingsystem')
+        return
+    end
 
     multiplier = clamp(multiplier, 0, Config.MaxMultiplier)
 
     local playerPed = PlayerPedId()
 
     if not IsPedInAnyVehicle(playerPed, false) then
-        notify('Du befindest dich in keinem Fahrzeug.', 'error', 'Handlingsystem')
+        notify('Du befindest dich in keinem Fahrzeug', 'error', 'Handlingsystem')
         return
     end
 
