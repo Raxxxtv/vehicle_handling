@@ -1,8 +1,5 @@
 local ESX = exports['es_extended']:getSharedObject()
 
--- Saves Original MaxSpeed
-local originalMaxSpeed = {}
-
 local speedChanged = false
 local monitoringExit = false
 local leftVehicleThread = false
@@ -42,14 +39,14 @@ local function resetVehicle(vehicle)
 
     SetVehicleCheatPowerIncrease(vehicle, 1)
     speedThreadId = speedThreadId + 1
-    speedChanged = false
+
     monitoringExit = false
 
-    if Config.EnableMaxSpeedLimit and originalMaxSpeed[vehicle] then
-        SetVehicleMaxSpeed(vehicle, originalMaxSpeed[vehicle])
+    if Config.EnableMaxSpeedLimit and speedChanged then
+        ModifyVehicleTopSpeed(vehicle, 1) -- Resets the vehicle max speed
     end
+    speedChanged = false
 
-    originalMaxSpeed[vehicle] = nil
     ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success', 5000, 'Handlingystem')
 end
 -- Checks if the player left the vehicle
@@ -113,11 +110,6 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
         return 
     end
 
-    -- Saves the originalMaxSpeed for the vehicle once
-    if not originalMaxSpeed[vehicle] then
-        originalMaxSpeed[vehicle] = GetVehicleEstimatedMaxSpeed(vehicle)
-    end
-
     -- multiplier 0 = reset
     if multiplier == 0 then
         resetVehicle(vehicle)
@@ -129,8 +121,8 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
 
     -- changes the MaxSpeed
     if Config.EnableMaxSpeedLimit then
-        local newMaxSpeed = originalMaxSpeed[vehicle] * (1.0 + multiplier * Config.MaxSpeedScale)
-        SetVehicleMaxSpeed(vehicle, newMaxSpeed)
+        local maxSpeedMultiplier = multiplier * 0.04 + 1.0
+        ModifyVehicleTopSpeed(vehicle, maxSpeedMultiplier) -- Multiplies the vehicle max speed
     end
 
     ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success', 5000, 'Handlingystem')
@@ -139,7 +131,11 @@ end)
 -- Gets Triggered if the player dies
 AddEventHandler('esx:onPlayerDeath', function()
     local ped = ESX.PlayerData.ped
-    if speedChanged then
-        resetVehicle(GetPlayersLastVehicle())
+    if IsPedInAnyVehicle(ped) then
+        local vehicle = GetVehiclePedIsIn(ped)
+        local isDriver = (GetPedInVehicleSeat(vehicle, -1) == ped)
+        if speedChanged and isDriver then
+            resetVehicle(GetPlayersLastVehicle())
+        end
     end
 end)
