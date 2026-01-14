@@ -35,7 +35,11 @@ end
 
 -- Resets the handling of the vehicle
 local function resetVehicle(vehicle)
-    if not DoesEntityExist(vehicle) then return end
+    if not DoesEntityExist(vehicle) then
+        speedChanged = false
+        ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success', 5000, 'Handlingystem')
+        return
+    end
 
     SetVehicleCheatPowerIncrease(vehicle, 1)
     speedThreadId = speedThreadId + 1
