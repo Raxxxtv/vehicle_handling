@@ -37,6 +37,7 @@ end
 local function resetVehicle(vehicle)
     if not DoesEntityExist(vehicle) then
         speedChanged = false
+        monitoringExit = false
         ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success', 5000, 'Handlingystem')
         return
     end
@@ -90,6 +91,14 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
 
     -- Checks if the player is logged in his char
     if not ESX.PlayerLoaded then return end
+    
+
+    local playerPed = ESX.PlayerData.ped
+    -- Checks if the player is in a Vehicle 
+    if not IsPedInAnyVehicle(playerPed) then
+        ESX.ShowNotification('Du befindest dich in keinem Fahrzeug', 'error', 5000, 'Handlingystem')
+        return
+    end
     -- Checks if the handling was already changed and if multiplier equals 0. If the handling wasnt changed and the multiplier equals 0 then the player becomes an error.
     if not speedChanged and multiplier == 0 then
         ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error', 5000, 'Handlingystem')
@@ -97,13 +106,6 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     end
 
     multiplier = clamp(multiplier, 0, Config.MaxMultiplier)
-
-    local playerPed = ESX.PlayerData.ped
-
-    if not IsPedInAnyVehicle(playerPed) then
-        ESX.ShowNotification('Du befindest dich in keinem Fahrzeug', 'error', 5000, 'Handlingystem')
-        return
-    end
 
     local vehicle = GetVehiclePedIsIn(playerPed, false)
 
