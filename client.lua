@@ -7,15 +7,15 @@ local function clamp(value, min, max)
     return math.max(min, math.min(value, max))
 end
 
-local speedThreadId = 0 -- Sets ThreadId
+local speedThreadId = 0 -- Sets First ThreadId
 
-local function changeVehicleSpeed(vehicle, multiplier)
+local function changeVehicleSpeed(vehicle, multiplier) -- When this function gets called, it changes the Vehicle speed and resets it if it is already changed. It changes the Torque and the MaxSpeed if its enabled in the Config.
     if speedChanged then 
         if multiplier == 0 then
             speedThreadId = speedThreadId + 1
 
             if Config.EnableMaxSpeedLimit then
-                ModifyVehicleTopSpeed(vehicle, 1) -- Resets the vehicle max speed
+                ModifyVehicleTopSpeed(vehicle, 1)
             end
             speedChanged = false
 
@@ -34,16 +34,15 @@ local function changeVehicleSpeed(vehicle, multiplier)
         return
     end
 
-    -- changes the MaxSpeed
     if Config.EnableMaxSpeedLimit then
         local maxSpeedMultiplier = multiplier * 0.04 + 1.0
-        ModifyVehicleTopSpeed(vehicle, maxSpeedMultiplier) -- Multiplies the vehicle max speed
+        ModifyVehicleTopSpeed(vehicle, maxSpeedMultiplier) 
     end
     ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success', 5000, 'Handlingystem')
 
     CreateThread(function()
         while speedThreadId == myThreadId do -- Runs the Code while speedThreadId has the same value as myThreadId
-            SetVehicleCheatPowerIncrease(vehicle, mult) -- Changes the handling of the vehicle
+            SetVehicleCheatPowerIncrease(vehicle, mult)
             Wait(0)
         end
         speedChanged = false
@@ -51,15 +50,13 @@ local function changeVehicleSpeed(vehicle, multiplier)
 end
 
 
-RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
-
-    -- Checks if the player is logged in his char
+RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier) -- The Event that gets called in the server.lua. Checks if the vehicle exists and is already Changed and is clamping the multiplier.
     if not ESX.PlayerLoaded then return end
     local playerPed = ESX.PlayerData.ped
 
     local vehicle = GetVehiclePedIsIn(playerPed, false)
 
-    if DoesEntityExist(vehicle) == 0 then -- Checks if the player is in a Vehicle 
+    if DoesEntityExist(vehicle) == 0 then
         ESX.ShowNotification('Du befindest dich in keinem Fahrzeug', 'error', 5000, 'Handlingystem')
         return
     end
@@ -71,7 +68,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
         return 
     end
 
-    if multiplier == 0 and not speedChanged then -- Checks if the handling was already changed and if multiplier equals 0. If the handling wasnt changed and the multiplier equals 0 then the player becomes an error.
+    if multiplier == 0 and not speedChanged then 
         ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error', 5000, 'Handlingystem')
         return
     end
@@ -79,7 +76,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier)
     changeVehicleSpeed(vehicle, multiplier)
 end)
 
-AddEventHandler('esx:enteredVehicle', function(vehicle, plate, seat, displayName, netId)
+AddEventHandler('esx:enteredVehicle', function(vehicle, plate, seat, displayName, netId) -- Resets the Vehicle Torque and MaxSpeed when you enter a Vehicle
     speedChanged = false
     speedThreadId = speedThreadId + 1
     ModifyVehicleTopSpeed(vehicle, 1)
