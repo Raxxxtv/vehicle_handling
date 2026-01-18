@@ -29,7 +29,7 @@ local function changeVehicleSpeed(vehicle, multiplier) -- When this function get
     local myThreadId = speedThreadId -- Changes the current ThreadId to the global ThreadId
     local mult = multiplier * 1.0
     -- Checks if the vehicle exists
-    if DoesEntityExist(vehicle) == 0 then
+    if vehicle == 0 then
         speedChanged = false
         return
     end
@@ -56,7 +56,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier) -- The Eve
 
     local vehicle = GetVehiclePedIsIn(playerPed, false)
 
-    if DoesEntityExist(vehicle) == 0 then
+    if vehicle == 0 then
         ESX.ShowNotification('Du befindest dich in keinem Fahrzeug', 'error', 5000, 'Handlingystem')
         return
     end
