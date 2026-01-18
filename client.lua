@@ -43,7 +43,6 @@ local function changeVehicleSpeed(vehicle, multiplier)
 
     CreateThread(function()
         while speedThreadId == myThreadId do -- Runs the Code while speedThreadId has the same value as myThreadId
-            print(speedThreadId, myThreadId)
             SetVehicleCheatPowerIncrease(vehicle, mult) -- Changes the handling of the vehicle
             Wait(0)
         end
