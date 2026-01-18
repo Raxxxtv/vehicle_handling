@@ -82,4 +82,5 @@ end)
 AddEventHandler('esx:enteredVehicle', function(vehicle, plate, seat, displayName, netId)
     speedChanged = false
     speedThreadId = speedThreadId + 1
+    ModifyVehicleTopSpeed(vehicle, 1)
 end)
