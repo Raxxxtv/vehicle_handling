@@ -23,7 +23,7 @@ local function changeVehicleSpeed(vehicle, multiplier) -- When this function get
         end
         return
     end
-    local speedChanged = true
+    speedChanged = true
     -- Checks if the Vehicle speed is already changed
     if multiplier == 0 then 
         ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error', 5000, 'Handlingystem')
