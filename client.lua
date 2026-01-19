@@ -9,7 +9,7 @@ end
 
 local speedThreadId = 0 -- Sets First ThreadId
 
-local function changeVehicleSpeed(vehicle, multiplier) -- When this function gets called, it changes the Vehicle speed and resets it if it is already changed. It changes the Torque and the MaxSpeed if its enabled in the Config.
+local function changeVehicleSpeed(vehicle, multiplier) -- When this function gets called, it changes the Vehicle speed and resets it if it is already changed. It changes the Torque. The MaxSpeed chages if its enabled in the Config.
     if speedChanged then 
         if multiplier == 0 then
             speedThreadId = speedThreadId + 1
@@ -40,8 +40,8 @@ local function changeVehicleSpeed(vehicle, multiplier) -- When this function get
     end
     ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success', 5000, 'Handlingystem')
 
-    CreateThread(function()
-        while speedThreadId == myThreadId do -- Runs the Code while speedThreadId has the same value as myThreadId
+    CreateThread(function() -- Runs the Code while speedThreadId has the same value as myThreadId and if not it sets speedChaged to false
+        while speedThreadId == myThreadId do
             SetVehicleCheatPowerIncrease(vehicle, mult)
             Wait(0)
         end
@@ -50,7 +50,7 @@ local function changeVehicleSpeed(vehicle, multiplier) -- When this function get
 end
 
 
-RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier) -- The Event that gets called in the server.lua. Checks if the vehicle exists and is already Changed and is clamping the multiplier.
+RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier) -- The Event that gets called in the server.lua. Checks if the vehicle exists and is already Changed and is clamping the multiplier. After that it calls the function to Change the speed of the Vehicle
     if not ESX.PlayerLoaded then return end
     local playerPed = ESX.PlayerData.ped
 
@@ -67,7 +67,7 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier) -- The Eve
         ESX.ShowNotification('Du befindest dich nicht auf dem Fahrersitz', 'error', 5000, 'Handlingystem')
         return 
     end
-
+    -- Checks if the Vehicle speed is already changed
     if multiplier == 0 and not speedChanged then 
         ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error', 5000, 'Handlingystem')
         return
