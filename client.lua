@@ -6,16 +6,16 @@ local function clamp(value, min, max)
 end
 
 local speedThreadId = 0 -- Sets First ThreadId
+local lastVehicle = 0
 
 local function changeVehicleSpeed(vehicle, multiplier) -- When this function gets called, it changes the Vehicle speed and resets it if it is already changed. It changes the Torque. The MaxSpeed chages if its enabled in the Config.
-    if speedChanged then 
+    if SpeedChanged then 
         if multiplier == 0 then
             speedThreadId = speedThreadId + 1
 
             if Config.EnableMaxSpeedLimit then
                 ModifyVehicleTopSpeed(vehicle, 1)
             end
-            
 
             ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success', 5000, 'Handlingystem')
         else
@@ -23,19 +23,21 @@ local function changeVehicleSpeed(vehicle, multiplier) -- When this function get
         end
         return
     end
-    speedChanged = true
+    SpeedChanged = true
+    if vehicle == 0 then
+        SpeedChanged = false
+        return
+    end
     -- Checks if the Vehicle speed is already changed
     if multiplier == 0 then 
         ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error', 5000, 'Handlingystem')
+        SpeedChanged = false
         return
     end
+
     local myThreadId = speedThreadId -- Changes the current ThreadId to the global ThreadId
     local mult = multiplier * 1.0
     -- Checks if the vehicle exists
-    if vehicle == 0 then
-        speedChanged = false
-        return
-    end
 
     if Config.EnableMaxSpeedLimit then
         local maxSpeedMultiplier = multiplier * 0.04 + 1.0
@@ -43,12 +45,12 @@ local function changeVehicleSpeed(vehicle, multiplier) -- When this function get
     end
     ESX.ShowNotification(('Fahrzeugbeschleunigung gesetzt: %sx'):format(multiplier), 'success', 5000, 'Handlingystem')
 
-    CreateThread(function() -- Runs the Code while speedThreadId has the same value as myThreadId and if not it sets speedChaged to false
+    CreateThread(function() -- Runs while speedThreadId matches myThreadId, resets SpeedChanged after thread ends
         while speedThreadId == myThreadId do
             SetVehicleCheatPowerIncrease(vehicle, mult)
             Wait(0)
         end
-        speedChanged = false
+        SpeedChanged = false
     end)
 end
 
@@ -74,7 +76,16 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier) -- The Eve
     changeVehicleSpeed(vehicle, multiplier)
 end)
 
-AddEventHandler('esx:enteredVehicle', function(vehicle, plate, seat, displayName, netId) -- Resets the Vehicle Torque and MaxSpeed when you enter a Vehicle
-    speedThreadId = speedThreadId + 1
-    ModifyVehicleTopSpeed(vehicle, 1)
+CreateThread(function()
+    while true do
+        local ped = ESX.PlayerData.ped
+        local vehicle = GetVehiclePedIsIn(ped)
+        
+        if vehicle ~= 0 and vehicle ~= lastVehicle then
+            speedThreadId = speedThreadId + 1
+            ModifyVehicleTopSpeed(vehicle, 1.0)
+            lastVehicle = vehicle
+        end
+        Wait(500)
+    end
 end)
