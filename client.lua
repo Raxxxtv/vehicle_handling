@@ -1,7 +1,5 @@
 local ESX = exports['es_extended']:getSharedObject()
 
-local speedChanged = false
-
 -- Capping the possible Numbers
 local function clamp(value, min, max)
     return math.max(min, math.min(value, max))
@@ -26,6 +24,11 @@ local function changeVehicleSpeed(vehicle, multiplier) -- When this function get
         return
     end
     speedChanged = true
+    -- Checks if the Vehicle speed is already changed
+    if multiplier == 0 then 
+        ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error', 5000, 'Handlingystem')
+        return
+    end
     local myThreadId = speedThreadId -- Changes the current ThreadId to the global ThreadId
     local mult = multiplier * 1.0
     -- Checks if the vehicle exists
@@ -66,11 +69,6 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier) -- The Eve
     if ESX.PlayerData.ped ~= GetPedInVehicleSeat(vehicle, -1) then 
         ESX.ShowNotification('Du befindest dich nicht auf dem Fahrersitz', 'error', 5000, 'Handlingystem')
         return 
-    end
-    -- Checks if the Vehicle speed is already changed
-    if multiplier == 0 and not speedChanged then 
-        ESX.ShowNotification('Dein Fahrzeug wurde nicht verändert', 'error', 5000, 'Handlingystem')
-        return
     end
 
     changeVehicleSpeed(vehicle, multiplier)
