@@ -17,7 +17,7 @@ local function changeVehicleSpeed(vehicle, multiplier) -- When this function get
             if Config.EnableMaxSpeedLimit then
                 ModifyVehicleTopSpeed(vehicle, 1)
             end
-            speedChanged = false
+            
 
             ESX.ShowNotification('Fahrzeugbeschleunigung zurückgesetzt', 'success', 5000, 'Handlingystem')
         else
@@ -77,7 +77,6 @@ RegisterNetEvent('vehicleSpeed:applyMultiplier', function(multiplier) -- The Eve
 end)
 
 AddEventHandler('esx:enteredVehicle', function(vehicle, plate, seat, displayName, netId) -- Resets the Vehicle Torque and MaxSpeed when you enter a Vehicle
-    speedChanged = false
     speedThreadId = speedThreadId + 1
     ModifyVehicleTopSpeed(vehicle, 1)
 end)
